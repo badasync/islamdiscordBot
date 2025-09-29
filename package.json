@@ -1,0 +1,26 @@
+{
+  "name": "islam-discord-bot",
+  "version": "1.0.0",
+  "description": "Discord bot for Quran, Hadith and Nasheeds",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@discordjs/opus": "^0.10.0",
+    "@discordjs/voice": "^0.19.0",
+    "@snazzah/davey": "^0.1.7",
+    "axios": "^1.4.0",
+    "discord.js": "^14.22.1",
+    "dotenv": "^16.1.4",
+    "ffmpeg-static": "^5.2.0",
+    "libsodium-wrappers": "^0.7.15",
+    "node-fetch": "^2.6.7",
+    "opusscript": "^0.0.8",
+    "play-dl": "^1.9.7",
+    "sodium-native": "^5.0.9"
+  }
+}
