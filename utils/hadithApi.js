@@ -1,7 +1,15 @@
 const axios = require('axios');
 
+// Open hadith API (JSDelivr mirror)
 const JSDELIVR_BASE = 'https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions';
 
+// Sunnah API (needs API key)
+const SUNNAH_API_BASE = 'https://api.sunnah.com/v1';
+const SUNNAH_API_KEY = process.env.SUNNAH_API_KEY;
+
+/**
+ * Fetch hadith collections from JSDelivr (English + Arabic)
+ */
 async function fetchFromJsDelivr(book) {
   try {
     const engUrl = `${JSDELIVR_BASE}/eng-${book}.json`;
@@ -16,11 +24,15 @@ async function fetchFromJsDelivr(book) {
       eng: engRes.status === 'fulfilled' ? engRes.value.data : null,
       ara: araRes.status === 'fulfilled' ? araRes.value.data : null
     };
-  } catch {
+  } catch (err) {
+    console.error('fetchFromJsDelivr error:', err.message);
     return { eng: null, ara: null };
   }
 }
 
+/**
+ * Find hadith in a given collection
+ */
 function findHadithInCollection(collection, number) {
   if (!collection) return null;
   const arrays = [];
@@ -36,14 +48,56 @@ function findHadithInCollection(collection, number) {
   return null;
 }
 
+/**
+ * Fetch hadith explanation from Sunnah API (if available)
+ */
+async function fetchHadithExplanation(book, number) {
+  if (!SUNNAH_API_KEY) {
+    return {
+      explanation_ar: 'Not available',
+      explanation_en: 'Not available',
+      source: 'Unknown'
+    };
+  }
+
+  try {
+    const res = await axios.get(`${SUNNAH_API_BASE}/collections/${book}/hadiths/${number}`, {
+      headers: { 'X-API-Key': SUNNAH_API_KEY },
+      timeout: 15000
+    });
+
+    const hadith = res.data?.hadith?.[0];
+    return {
+      explanation_ar: hadith?.explanation?.ar || 'Not available',
+      explanation_en: hadith?.explanation?.en || 'Not available',
+      source: res.data.collection || 'Unknown'
+    };
+  } catch (err) {
+    console.error('fetchHadithExplanation error:', err.message);
+    return {
+      explanation_ar: 'Not available',
+      explanation_en: 'Not available',
+      source: 'Unknown'
+    };
+  }
+}
+
+/**
+ * Main function to fetch hadith text + explanation
+ */
 async function getHadithDetailed(book, number) {
   const js = await fetchFromJsDelivr(book);
-  let engItem = js.eng ? findHadithInCollection(js.eng, number) : null;
-  let araItem = js.ara ? findHadithInCollection(js.ara, number) : null;
+  const engItem = js.eng ? findHadithInCollection(js.eng, number) : null;
+  const araItem = js.ara ? findHadithInCollection(js.ara, number) : null;
+
+  const explanation = await fetchHadithExplanation(book, number);
 
   return {
     arabic: araItem ? araItem.text || 'Not available' : 'Not available',
-    english: engItem ? engItem.text || 'Not available' : 'Not available'
+    english: engItem ? engItem.text || 'Not available' : 'Not available',
+    explanation_ar: explanation.explanation_ar,
+    explanation_en: explanation.explanation_en,
+    source: explanation.source
   };
 }
 

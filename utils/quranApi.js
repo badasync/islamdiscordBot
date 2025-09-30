@@ -5,35 +5,69 @@ const AUDIO_ED = process.env.QURAN_AUDIO_EDITION || 'ar.alafasy';
 const TEXT_ED = 'quran-uthmani';
 const TRANSLATION_ED = process.env.QURAN_TRANSLATION || 'en.asad';
 
+// New tafsir source: spa5k Tafsir API via jsDelivr
+const TAFSIR_JSDELIVR_BASE = 'https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@main/tafsir';
+
 /**
- * Get ayah text (Arabic + translation) by reference
- * Accepts "2:255" or (surah, ayah) pairs.
+ * Get ayah text (Arabic + translation)
  */
 async function getAyahText(refOrSurah, maybeAyah) {
   try {
-    let ref = maybeAyah ? `${refOrSurah}:${maybeAyah}` : refOrSurah;
+    const ref = maybeAyah ? `${refOrSurah}:${maybeAyah}` : refOrSurah;
 
-    // Arabic
     const arRes = await fetch(`${BASE}/ayah/${encodeURIComponent(ref)}/${TEXT_ED}`);
     const arJson = await arRes.json();
     if (arJson.status !== 'OK') throw new Error('Ayah not found');
 
-    // Translation
     const trRes = await fetch(`${BASE}/ayah/${encodeURIComponent(ref)}/${TRANSLATION_ED}`);
     const trJson = await trRes.json();
 
     return {
       arabic: arJson.data.text,
-      arabicMeta: arJson.data,
       translation: trJson && trJson.status === 'OK' ? trJson.data.text : null
     };
   } catch (err) {
+    console.error('getAyahText error:', err.message);
     throw err;
   }
 }
 
 /**
- * Get the audio URL for a single ayah
+ * Get tafsir (Arabic + English) using spa5k tafsir_api
+ */
+async function getAyahTafsir(surah, ayah) {
+  try {
+    // editionSlug examples: "ar-tafseer-al-jalalayn", "en-tafseer-ibn-kathir"
+    // we try a default Arabic tafsir + default English tafsir
+    const arabicSlug = 'ar-tafseer-al-jalalayn';
+    const englishSlug = 'en-tafseer-ibn-kathir';
+
+    // Arabic tafsir
+    const arUrl = `${TAFSIR_JSDELIVR_BASE}/${arabicSlug}/${surah}/${ayah}.json`;
+    const arRes = await fetch(arUrl);
+    const arJson = await arRes.json();
+    const tafsirAr = arJson?.text || 'Not available';
+
+    // English tafsir
+    let tafsirEn = 'Not available';
+    try {
+      const enUrl = `${TAFSIR_JSDELIVR_BASE}/${englishSlug}/${surah}/${ayah}.json`;
+      const enRes = await fetch(enUrl);
+      const enJson = await enRes.json();
+      tafsirEn = enJson?.text || 'Not available';
+    } catch {
+      tafsirEn = 'Not available';
+    }
+
+    return { arabic: tafsirAr, english: tafsirEn };
+  } catch (err) {
+    console.error('getAyahTafsir error:', err.message);
+    return { arabic: null, english: null };
+  }
+}
+
+/**
+ * Get audio for single ayah
  */
 async function getAyahAudio(refOrSurah, maybeAyah) {
   try {
@@ -43,12 +77,13 @@ async function getAyahAudio(refOrSurah, maybeAyah) {
     if (json.status !== 'OK' || !json.data.audio) throw new Error('Ayah audio not found');
     return json.data.audio;
   } catch (err) {
+    console.error('getAyahAudio error:', err.message);
     throw err;
   }
 }
 
 /**
- * Get array of audio URLs for entire surah by number
+ * Get array of audio URLs for entire surah
  */
 async function getSurahAudioUrls(surahNumber) {
   try {
@@ -56,9 +91,7 @@ async function getSurahAudioUrls(surahNumber) {
     const json = await res.json();
     if (json.status !== 'OK' || !json.data.ayahs) throw new Error('Surah audio not found');
 
-    // Return array of ayah audio URLs, filter out null/undefined
     const urls = json.data.ayahs.map(a => a.audio).filter(u => typeof u === 'string' && u.length > 0);
-
     if (!urls.length) throw new Error('No audio available for this surah');
     return urls;
   } catch (err) {
@@ -67,24 +100,9 @@ async function getSurahAudioUrls(surahNumber) {
   }
 }
 
-/**
- * Get surah text (metadata + ayahs)
- */
-async function getSurahData(surahNumber) {
-  try {
-    const res = await fetch(`${BASE}/surah/${encodeURIComponent(surahNumber)}/${TEXT_ED}`);
-    const json = await res.json();
-    if (json.status !== 'OK') throw new Error('Surah text not found');
-    return json.data;
-  } catch (err) {
-    console.error(`getSurahData error for Surah ${surahNumber}:`, err.message);
-    return null;
-  }
-}
-
 module.exports = {
   getAyahText,
+  getAyahTafsir,
   getAyahAudio,
-  getSurahAudioUrls,
-  getSurahData
+  getSurahAudioUrls
 };
