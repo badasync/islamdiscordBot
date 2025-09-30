@@ -36,7 +36,7 @@ The default command prefix is: `!`
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/islamic-resource-bot.git
+   git clon https://github.com/badasync/islamdiscordBot.git
    cd islamic-resource-bot
 
 2. **Install dependencies:
