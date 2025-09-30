@@ -1,8 +1,9 @@
-const { getAyahText } = require('../utils/quranApi');
+// commands/ayah.js
+const { getAyahText, getAyahTafsir } = require('../utils/quranApi');
 
 module.exports = {
   name: 'ayah',
-  description: 'Get ayah text. Usage: !ayah 2:255 or !ayah 2 255',
+  description: 'Get ayah with translation and tafsir. Usage: !ayah 2:255',
   async execute(message, args) {
     if (!args.length) {
       return message.reply('Usage: !ayah 2:255 or !ayah 2 255');
@@ -20,22 +21,33 @@ module.exports = {
 
     try {
       const data = await getAyahText(surah, ayah);
+      const tafsir = await getAyahTafsir(surah, ayah);
 
       if (!data || (!data.arabic && !data.translation)) {
         return message.reply('⚠️ Could not fetch that ayah.');
       }
 
-      // Make sure data is a single object (not an array)
-      const arabic = Array.isArray(data.arabic) ? data.arabic.join(' ') : data.arabic;
-      const translation = Array.isArray(data.translation) ? data.translation.join(' ') : data.translation;
-
       const ref = `${surah}:${ayah}`;
+      const output = `
+📖 Ayah ${ref}
 
-      // Send ONE message only
-      await message.channel.send(`**${ref} — Arabic:**\n${arabic}\n\n**${ref} — Translation:**\n${translation}`);
+Arabic:
+${data.arabic}
+
+English Translation:
+${data.translation}
+
+Tafsir Arabic:
+${tafsir.arabic || 'Not available'}
+
+Tafsir English:
+${tafsir.english || 'Not available'}
+      `;
+
+      await message.channel.send(output);
     } catch (err) {
       console.error('Ayah command error:', err);
-      message.reply('⚠️ Could not fetch that ayah. Make sure the reference is correct.');
+      message.reply('⚠️ Could not fetch ayah or tafsir.');
     }
   }
 };
