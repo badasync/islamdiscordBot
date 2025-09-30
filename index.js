@@ -1,8 +1,10 @@
+// index.js
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 
+// sodium (for voice support)
 let sodiumReady = false;
 try {
   require('sodium-native');
@@ -23,6 +25,7 @@ if (!sodiumReady) {
   process.exit(1);
 }
 
+// create discord client
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -34,7 +37,7 @@ const client = new Client({
 
 client.commands = new Collection();
 
-
+// load commands
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
@@ -48,7 +51,6 @@ for (const file of commandFiles) {
     console.log(`⚠️ Skipped invalid command file: ${file}`);
   }
 }
-
 
 client.once('ready', () => {
   console.log(`🤖 Bot is online! Logged in as ${client.user.tag}`);
@@ -67,7 +69,7 @@ client.on('messageCreate', async message => {
     await command.execute(message, args);
   } catch (error) {
     console.error(`${commandName} command error:`, error);
-    message.reply('⚠️ حصل خطأ أثناء تنفيذ الأمر');
+    message.reply('⚠️ Error while executing command');
   }
 });
 
