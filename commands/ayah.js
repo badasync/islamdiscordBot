@@ -1,4 +1,3 @@
-// commands/ayah.js
 const { getAyahText, getAyahTafsir } = require('../utils/quranApi');
 
 module.exports = {
