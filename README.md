@@ -9,7 +9,7 @@ Commands and usage:
 | `!ayah` | `!ayah 2:255` or `!ayah 2 255` | Fetches and displays a Quranic verse in Arabic & English |
 | `!surah` | `!surah 36` | (Voice Channel Required) Plays the full audio recitation of a Surah |
 | `!hadith` | `!hadith bukhari 25` | Fetches Arabic & English text of a Hadith with detailed explanation |
-| `!play` | `!play <YouTube link>` | (Voice Channel Required) Streams Quran, Nasheeds, or Islamic audio from supported links |
+| `!play` | `!play 2:255` | (Voice Channel Required) Plays audio recitation of a specific Quran ayah |
 | `!stop` | `!stop` | Stops audio playback and disconnects from the voice channel |
 | `!ping` | `!ping` | Checks bot responsiveness |
 
@@ -28,7 +28,7 @@ npm install
 
 3. Create a `.env` file in the root directory and add your Discord bot token:
 ```env
-DISCORD_BOT_TOKEN=your-bot-token-here
+DISCORD_TOKEN=your-bot-token-here
 ```
 
 4. Run the bot manually:

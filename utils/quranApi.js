@@ -83,6 +83,28 @@ async function getAyahAudio(refOrSurah, maybeAyah) {
 }
 
 /**
+ * Get surah metadata (name, englishName, numberOfAyahs, etc.)
+ */
+async function getSurahData(surahNumber) {
+  try {
+    const res = await fetch(`${BASE}/surah/${encodeURIComponent(surahNumber)}`);
+    const json = await res.json();
+    if (json.status !== 'OK') throw new Error('Surah not found');
+    return {
+      number: json.data.number,
+      name: json.data.name,
+      englishName: json.data.englishName,
+      englishNameTranslation: json.data.englishNameTranslation,
+      numberOfAyahs: json.data.numberOfAyahs,
+      revelationType: json.data.revelationType
+    };
+  } catch (err) {
+    console.error(`getSurahData error for Surah ${surahNumber}:`, err.message);
+    return { name: `Surah ${surahNumber}`, englishName: `Surah ${surahNumber}` };
+  }
+}
+
+/**
  * Get array of audio URLs for entire surah
  */
 async function getSurahAudioUrls(surahNumber) {
@@ -104,5 +126,6 @@ module.exports = {
   getAyahText,
   getAyahTafsir,
   getAyahAudio,
+  getSurahData,
   getSurahAudioUrls
 };
