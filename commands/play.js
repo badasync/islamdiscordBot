@@ -1,37 +1,42 @@
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, NoSubscriberBehavior } = require('@discordjs/voice');
-const playdl = require('play-dl');
+const { getAyahAudio } = require('../utils/quranApi');
 
 module.exports = {
   name: 'play',
-  description: 'Play audio from YouTube link. Usage: !play <url>',
+  description: 'Play Quran ayah audio. Usage: !play 2:255 or !play 2 255',
   async execute(message, args) {
-    if (!args[0]) {
-      return message.reply('❌ لازم تديني لينك YouTube.');
+    if (!args.length) {
+      return message.reply('Usage: !play 2:255 or !play 2 255');
     }
 
-    const url = args[0];
-    if (!playdl.yt_validate(url)) {
-      return message.reply('⚠️ اللينك مش صحيح أو مش مدعوم.');
+    let surah, ayah;
+    if (args.length === 1 && args[0].includes(':')) {
+      [surah, ayah] = args[0].split(':');
+    } else if (args.length >= 2) {
+      surah = args[0];
+      ayah = args[1];
+    } else {
+      return message.reply('Usage: !play 2:255 or !play 2 255');
     }
 
     const voiceChannel = message.member.voice.channel;
     if (!voiceChannel) {
-      return message.reply('🎤 خش أي voice channel الأول.');
+      return message.reply('🎤 You must join a voice channel first.');
     }
 
     try {
-      // Join VC
+      const audioUrl = await getAyahAudio(surah, ayah);
+      if (!audioUrl) {
+        return message.reply('⚠️ Could not find audio for that ayah.');
+      }
+
       const connection = joinVoiceChannel({
         channelId: voiceChannel.id,
         guildId: message.guild.id,
         adapterCreator: message.guild.voiceAdapterCreator,
       });
 
-      // Get audio stream
-      const stream = await playdl.stream(url);
-      const resource = createAudioResource(stream.stream, {
-        inputType: stream.type,
-      });
+      const resource = createAudioResource(audioUrl, { inputType: 'arbitrary' });
 
       const player = createAudioPlayer({
         behaviors: {
@@ -40,21 +45,25 @@ module.exports = {
       });
 
       player.on(AudioPlayerStatus.Playing, () => {
-        console.log('▶️ الصوت شغال');
+        console.log(`▶️ Playing Ayah ${surah}:${ayah}`);
+      });
+
+      player.on(AudioPlayerStatus.Idle, () => {
+        connection.destroy();
       });
 
       player.on('error', error => {
         console.error('❌ Error in player:', error);
-        message.channel.send('⚠️ حصل خطأ أثناء تشغيل الصوت.');
+        message.channel.send('⚠️ Error playing audio.');
       });
 
       connection.subscribe(player);
       player.play(resource);
 
-      await message.reply(`🎶 شغال دلوقتي: ${url}`);
+      await message.reply(`📖 Now playing Ayah ${surah}:${ayah}`);
     } catch (err) {
       console.error('Play command error:', err);
-      message.reply('⚠️ حصل خطأ في تشغيل الصوت.');
+      message.reply('⚠️ Could not play that ayah.');
     }
   },
 };
