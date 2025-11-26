@@ -7,6 +7,41 @@ const JSDELIVR_BASE = 'https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/edit
 const SUNNAH_API_BASE = 'https://api.sunnah.com/v1';
 const SUNNAH_API_KEY = process.env.SUNNAH_API_KEY;
 
+// All available hadith collections
+const HADITH_COLLECTIONS = {
+  bukhari: 'Sahih al-Bukhari',
+  muslim: 'Sahih Muslim',
+  abudawud: 'Sunan Abu Dawud',
+  tirmidhi: 'Jami at-Tirmidhi',
+  nasai: 'Sunan an-Nasai',
+  ibnmajah: 'Sunan Ibn Majah',
+  malik: 'Muwatta Malik',
+  nawawi: 'Forty Hadith of an-Nawawi',
+  qudsi: 'Forty Hadith Qudsi',
+  dehlawi: 'Forty Hadith of Shah Waliullah Dehlawi'
+};
+
+/**
+ * Get list of available collections
+ */
+function getAvailableCollections() {
+  return HADITH_COLLECTIONS;
+}
+
+/**
+ * Check if a collection is valid
+ */
+function isValidCollection(book) {
+  return book && HADITH_COLLECTIONS.hasOwnProperty(book.toLowerCase());
+}
+
+/**
+ * Get collection full name
+ */
+function getCollectionName(book) {
+  return HADITH_COLLECTIONS[book.toLowerCase()] || book;
+}
+
 /**
  * Fetch hadith collections from JSDelivr (English + Arabic)
  */
@@ -97,10 +132,15 @@ async function getHadithDetailed(book, number) {
     english: engItem ? engItem.text || 'Not available' : 'Not available',
     explanation_ar: explanation.explanation_ar,
     explanation_en: explanation.explanation_en,
-    source: explanation.source
+    source: explanation.source,
+    collectionName: getCollectionName(book)
   };
 }
 
 module.exports = {
-  getHadithDetailed
+  getHadithDetailed,
+  getAvailableCollections,
+  isValidCollection,
+  getCollectionName,
+  HADITH_COLLECTIONS
 };
