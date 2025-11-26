@@ -5,10 +5,13 @@ module.exports = {
   name: 'surah',
   description: 'Play a full Surah in your voice channel. Usage: !surah <surahNumber>',
   async execute(message, args) {
-    if (!args[0]) return message.reply('Usage: !surah <surahNumber>');
+    if (!args[0]) return message.reply('Usage: !surah <surahNumber> (1-114)');
     if (!message.member.voice.channel) return message.reply('You must join a voice channel first.');
 
     const surahNum = parseInt(args[0]);
+    if (isNaN(surahNum) || surahNum < 1 || surahNum > 114) {
+      return message.reply('Invalid surah number. Please enter a number between 1 and 114.');
+    }
     const connection = joinVoiceChannel({
       channelId: message.member.voice.channel.id,
       guildId: message.guild.id,
