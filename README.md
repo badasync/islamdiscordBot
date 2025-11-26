@@ -12,6 +12,8 @@ Commands and usage:
 | `!play` | `!play 2:255` | (Voice Channel Required) Plays audio recitation of a specific Quran ayah |
 | `!stop` | `!stop` | Stops audio playback and disconnects from the voice channel |
 | `!ping` | `!ping` | Checks bot responsiveness |
+| `!help` | `!help` | Shows all available commands with usage examples |
+| `!randomhadith` | `!randomhadith` or `!randomhadith bukhari` | Fetches a random hadith from any or specific collection |
 
 Installation:
 
@@ -48,4 +50,4 @@ docker build -t islamic-bot .
 docker run -d --name islamic-bot --env-file .env islamic-bot
 ```
 
-Requirements: Node.js v16 or higher, Discord.js v14.
+Requirements: Node.js v18 or higher, Discord.js v14.
